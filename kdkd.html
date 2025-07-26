@@ -1,0 +1,2786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Traffic Monitor - Kottakkal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+    <style>
+        :root {
+            --primary: #1a5d1a;
+            --secondary: #4caf50;
+            --accent: #ff9800;
+            --emergency: #e74c3c;
+            --success: #27ae60;
+            --warning: #e74c3c;
+            --light: #f0f7f0;
+            --dark: #333;
+            --gray: #555;
+            --light-blue: #e3f2fd;
+            --shadow: 0 4px 12px rgba(0,0,0,0.1);
+            --transition: all 0.3s ease;
+            --card-radius: 16px;
+            --btn-radius: 50px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f0f7f0 0%, #e4edf5 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header Styles */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: rgb(240, 240, 241);
+            padding: 15px 0;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .logo i {
+            font-size: 28px;
+            color: var(--accent);
+            background: rgb(255, 255, 255);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .logo h1 {
+            font-size: 22px;
+            font-weight: 700;
+            font-family: 'Montserrat', sans-serif;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+        }
+        
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: var(--transition);
+            position: relative;
+        }
+        
+        nav a:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: var(--accent);
+            transition: var(--transition);
+            transform: translateX(-50%);
+        }
+        
+        nav a:hover:after,
+        nav a.active:after {
+            width: 80%;
+        }
+        
+        .user-actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: var(--btn-radius);
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: var(--accent);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid white;
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(120deg, rgba(26, 93, 26, 0.9), rgba(76, 175, 80, 0.85)), url('https://images.unsplash.com/photo-1564564321837-a57b7070ac4f?ixlib=rb-4.0.3') no-repeat center center/cover;
+            padding: 100px 0;
+            position: relative;
+            color: white;
+            text-align: center;
+            clip-path: polygon(0 0, 100% 0, 100% 90%, 0 100%);
+            margin-bottom: -50px;
+        }
+        
+        .hero-content {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .hero h2 {
+            font-size: 3.2rem;
+            margin-bottom: 20px;
+            font-weight: 800;
+            font-family: 'Montserrat', sans-serif;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            line-height: 1.2;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .hero-btns {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        /* Features Section */
+        .features {
+            padding: 120px 0 80px;
+            position: relative;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 50px;
+            position: relative;
+        }
+        
+        .section-title h2 {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-weight: 800;
+            font-family: 'Montserrat', sans-serif;
+        }
+        
+        .section-title p {
+            color: var(--gray);
+            max-width: 700px;
+            margin: 0 auto;
+            font-size: 1.1rem;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: var(--card-radius);
+            padding: 35px 30px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        .feature-card:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: var(--accent);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.5s ease;
+            z-index: -1;
+        }
+        
+        .feature-card:hover:before {
+            transform: scaleX(1);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(76, 175, 80, 0.1);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 36px;
+            color: var(--secondary);
+        }
+        
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--dark);
+        }
+        
+        /* Traffic Map Section */
+        .traffic-map-section {
+            padding: 80px 0;
+            background: linear-gradient(to bottom, #e3f2fd, #f5f7fa);
+        }
+        
+        .map-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .map-wrapper {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            border-radius: var(--card-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            height: 500px;
+            position: relative;
+        }
+        
+        .map-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .map-content {
+            height: calc(100% - 70px);
+            position: relative;
+        }
+        
+        .map-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            z-index: 10;
+            max-width: 300px;
+        }
+        
+        .map-overlay h3 {
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+        
+        .traffic-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        
+        .legend-low {
+            background-color: var(--success);
+        }
+        
+        .legend-medium {
+            background-color: var(--accent);
+        }
+        
+        .legend-high {
+            background-color: var(--warning);
+        }
+        
+        .traffic-info {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            border-radius: var(--card-radius);
+            padding: 0;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .info-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            background: var(--primary);
+            color: white;
+            border-radius: var(--card-radius) var(--card-radius) 0 0;
+        }
+        
+        .info-content {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+        
+        .traffic-status {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .status-indicator {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            margin-right: 15px;
+        }
+        
+        .status-low {
+            background-color: var(--success);
+        }
+        
+        .status-medium {
+            background-color: var(--accent);
+        }
+        
+        .status-high {
+            background-color: var(--warning);
+        }
+        
+        .status-content h4 {
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
+        /* Route Planner */
+        .route-planner {
+            padding: 80px 0;
+            background: #f5f7fa;
+        }
+        
+        .planner-container {
+            background: white;
+            border-radius: var(--card-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-top: 30px;
+        }
+        
+        .planner-header {
+            padding: 25px;
+            background: var(--light);
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .planner-form {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr auto;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .form-group {
+            position: relative;
+        }
+        
+        .form-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px 12px 45px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: var(--transition);
+        }
+        
+        .form-control:focus {
+            border-color: var(--secondary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+        }
+        
+        .switch-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .switch-btn:hover {
+            transform: rotate(180deg);
+        }
+        
+        .planner-results {
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .route-option {
+            background: #f9f9f9;
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid var(--secondary);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        
+        .route-option:hover {
+            background: var(--light);
+            transform: translateX(5px);
+        }
+        
+        .route-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .route-time {
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .route-distance {
+            color: var(--gray);
+        }
+        
+        .route-details {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        /* Report Section */
+        .report-section {
+            padding: 80px 0;
+            background: linear-gradient(to bottom, #f5f7fa, #e3f2fd);
+        }
+        
+        .report-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 30px;
+        }
+        
+        .report-form {
+            background: white;
+            border-radius: var(--card-radius);
+            padding: 30px;
+            box-shadow: var(--shadow);
+        }
+        
+        .form-title {
+            margin-bottom: 25px;
+            color: var(--primary);
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        select.form-control {
+            appearance: none;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23333' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E") no-repeat right 15px center;
+            background-size: 12px;
+        }
+        
+        .report-types {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .report-type {
+            background: #f8f9fa;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .report-type:hover,
+        .report-type.active {
+            border-color: var(--accent);
+            background: rgba(255, 152, 0, 0.05);
+        }
+        
+        .report-type i {
+            font-size: 24px;
+            color: var(--secondary);
+            margin-bottom: 10px;
+        }
+        
+        .report-stats {
+            background: white;
+            border-radius: var(--card-radius);
+            padding: 30px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: var(--light);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1;
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        /* Emergency Services Section */
+        .emergency-services-section {
+            padding: 100px 0;
+            background: #f8f0f0;
+        }
+        
+        .hero-emergency {
+            background: linear-gradient(120deg, rgba(231, 76, 60, 0.9), rgba(192, 57, 43, 0.85)), url('https://images.unsplash.com/photo-1583212292454-1fe6229603b7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1770&q=80') no-repeat center center/cover;
+            padding: 100px 0;
+            position: relative;
+            color: white;
+            text-align: center;
+            clip-path: polygon(0 0, 100% 0, 100% 90%, 0 100%);
+            margin-bottom: 50px;
+        }
+        
+        .hero-emergency h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            font-weight: 800;
+            font-family: 'Montserrat', sans-serif;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .hero-emergency p {
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .emergency-alert {
+            background: #ff5252;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 50px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: pulse 2s infinite;
+            margin-top: 20px;
+            max-width: 300px;
+            margin: 20px auto 0;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 82, 82, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(255, 82, 82, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 82, 82, 0);
+            }
+        }
+        
+        .directory-nav {
+            background: white;
+            border-radius: var(--card-radius);
+            box-shadow: var(--shadow);
+            padding: 20px;
+            margin: 30px auto;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .dir-btn {
+            background: rgba(231, 76, 60, 0.1);
+            color: var(--emergency);
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .dir-btn:hover,
+        .dir-btn.active {
+            background: var(--emergency);
+            color: white;
+            transform: translateY(-3px);
+        }
+        
+        .directory-section {
+            display: none;
+            animation: fadeIn 0.5s ease forwards;
+        }
+        
+        .directory-section.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .section-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(231, 76, 60, 0.1);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: var(--emergency);
+        }
+        
+        .section-title {
+            font-size: 2.2rem;
+            color: var(--emergency);
+        }
+        
+        .section-description {
+            color: var(--gray);
+            margin-bottom: 30px;
+            max-width: 800px;
+        }
+        
+        .directory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 50px;
+        }
+        
+        .directory-card {
+            background: white;
+            border-radius: var(--card-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .directory-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-header {
+            padding: 25px;
+            background: var(--emergency);
+            color: rgb(243, 248, 244);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .card-body {
+            padding: 25px;
+            flex: 1;
+        }
+        
+        .card-title {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: var(--emergency);
+        }
+        
+        .contact-info {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+        
+        .contact-info li {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .contact-info i {
+            margin-right: 10px;
+            color: var(--emergency);
+            min-width: 20px;
+        }
+        
+        .distance {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #fff0f0;
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-weight: 500;
+        }
+        
+        .emergency-form {
+            background: #fff9f9;
+            border-radius: var(--card-radius);
+            padding: 30px;
+            border: 2px solid #ffcccc;
+            margin-top: 40px;
+        }
+        
+        .form-title {
+            font-size: 1.8rem;
+            color: var(--emergency);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .form-group {
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark);
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 14px 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: var(--transition);
+        }
+        
+        .form-control:focus {
+            border-color: var(--emergency);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
+        }
+        
+        textarea.form-control {
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        .btn-emergency {
+            background: var(--emergency);
+            color: rgb(242, 245, 241);
+            padding: 16px 40px;
+            border-radius: var(--btn-radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+            margin-top: 20px;
+        }
+        
+        .btn-emergency:hover {
+            background: #c0392b;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(231, 76, 60, 0.4);
+        }
+        
+        /* Traffic Rules Section */
+        .traffic-rules-section {
+            padding: 100px 0;
+            background: linear-gradient(135deg, #1a5d1a, #2c3e50);
+            color: rgb(245, 240, 240);
+        }
+        
+        .rules-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+        
+        .rules-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .rule-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--card-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+        
+        .rule-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .rule-image {
+            width: 100%;
+            height: 180px;
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .rule-content {
+            padding: 15px;
+        }
+        
+        .rule-content h4 {
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+        
+        .rule-content p {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+        
+        .rules-form {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--card-radius);
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .rules-form h3 {
+            margin-bottom: 25px;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-group.full-width {
+            width: 100%;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            margin-bottom: 15px;
+        }
+        
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        .rules-importance {
+            background: rgba(255, 152, 0, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        
+        .rules-importance h4 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .rules-importance ul {
+            padding-left: 20px;
+        }
+        
+        .rules-importance li {
+            margin-bottom: 10px;
+        }
+        
+        /* Developers Section */
+        .developers-section {
+            padding: 100px 0;
+            background: #f8f9fa;
+        }
+        
+        .developers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+            margin-top: 50px;
+        }
+        
+        .developer-card {
+            background: white;
+            border-radius: var(--card-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .developer-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+        
+        .developer-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid white;
+            margin: 0 auto 20px;
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .developer-avatar.rishal {
+            background-image: url('WhatsApp Image 2025-07-26 at 00.11.16_bca626f5.jpg');
+        }
+        
+        .developer-avatar.jibin {
+            background-image: url('WhatsApp Image 2025-07-26 at 00.11.15_474585ee.jpg');
+        }
+        
+        .developer-body {
+            padding: 30px;
+            flex: 1;
+        }
+        
+        .developer-info {
+            margin-bottom: 20px;
+        }
+        
+        .developer-info h3 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+            color: var(--primary);
+        }
+        
+        .developer-info .role {
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .institution {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            color: var(--gray);
+        }
+        
+        .institution i {
+            color: var(--secondary);
+        }
+        
+        .developer-skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .skill-tag {
+            background: var(--light);
+            color: var(--dark);
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+        }
+        
+        /* Footer */
+        footer {
+            background: linear-gradient(135deg, #0d3b0d, #1a5d1a);
+            color: white;
+            padding: 80px 0 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://images.unsplash.com/photo-1550684848-86f5d4a8f1e5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80') center/cover;
+            opacity: 0.05;
+            z-index: -1;
+        }
+        
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .footer-col h3 {
+            font-size: 1.4rem;
+            margin-bottom: 25px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+        
+        .footer-col h3::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 50px;
+            height: 3px;
+            background: var(--accent);
+        }
+        
+        .contact-info {
+            list-style: none;
+        }
+        
+        .contact-info li {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .contact-info i {
+            margin-right: 10px;
+            color: var(--accent);
+            margin-top: 5px;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: var(--transition);
+            font-size: 18px;
+        }
+        
+        .social-links a:hover {
+            background: var(--accent);
+            transform: translateY(-5px);
+        }
+        
+        .copyright {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+        
+        .footer-newsletter {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        
+        .footer-newsletter h4 {
+            margin-bottom: 15px;
+        }
+        
+        .footer-newsletter input {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 50px;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            margin-bottom: 10px;
+        }
+        
+        .footer-newsletter input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .footer-newsletter button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 50px;
+            border: none;
+            background: var(--accent);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .footer-newsletter button:hover {
+            background: #e68a00;
+        }
+        
+        .footer-map {
+            height: 200px;
+            background: linear-gradient(135deg, #8e44ad, #3498db);
+            border-radius: 12px;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .footer-map i {
+            font-size: 40px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        
+        /* Responsive */
+        @media (max-width: 992px) {
+            .report-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .planner-form {
+                grid-template-columns: 1fr auto;
+            }
+            
+            .rules-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            nav ul {
+                gap: 10px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .hero h2 {
+                font-size: 2.3rem;
+            }
+            
+            .hero-emergency h1 {
+                font-size: 2.3rem;
+            }
+            
+            .hero-btns {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .map-container {
+                flex-direction: column;
+            }
+            
+            .planner-form {
+                grid-template-columns: 1fr;
+            }
+            
+            .switch-btn {
+                transform: rotate(90deg);
+                margin: 10px auto;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate {
+            animation: fadeIn 0.8s ease forwards;
+        }
+        
+        .delay-1 {
+            animation-delay: 0.1s;
+        }
+        
+        .delay-2 {
+            animation-delay: 0.2s;
+        }
+        
+        .delay-3 {
+            animation-delay: 0.3s;
+        }
+        
+        /* Page Navigation */
+        .page-navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+            gap: 15px;
+        }
+        
+        .page-btn {
+            background: var(--primary);
+            color: rgb(241, 243, 241);
+            border: none;
+            padding: 10px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .page-btn:hover {
+            background: var(--secondary);
+            transform: translateY(-3px);
+        }
+        
+        /* Alerts Modal */
+        .alert-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .alert-modal-content {
+            background: var(--light);
+            padding: 20px;
+            border-radius: var(--card-radius);
+            max-width: 500px;
+            width: 90%;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+        
+        .alert-modal-content h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        
+        .close-alert {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 1.5rem;
+            color: var(--dark);
+            cursor: pointer;
+        }
+        
+        .alert-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-traffic-light"></i>
+                    <h1>Kottakkal Traffic Monitor</h1>
+                </div>
+                
+                <nav>
+                    <ul>
+                        <li><a href="#" class="active">Home</a></li>
+                        <li><a href="#traffic-map-section">Live Map</a></li>
+                        <li><a href="#route-planner">Route Planner</a></li>
+                        <li><a href="#report-section">Reports</a></li>
+                        <li><a href="#emergency-services">Emergency</a></li>
+                        <li><a href="#traffic-rules">Traffic Rules</a></li>
+                        <li><a href="#developers-section">Developers</a></li>
+                    </ul>
+                </nav>
+                
+                <div class="user-actions">
+                    <button class="btn btn-outline"><i class="fas fa-user"></i> Login</button>
+                    <button class="btn btn-primary" id="alerts-btn"><i class="fas fa-bell"></i> Alerts</button>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h2>Smart Traffic Solutions for Kottakkal</h2>
+                <p>Real-time traffic monitoring, intelligent routing, and incident reporting to reduce congestion and improve emergency response times in Kottakkal</p>
+                <div class="hero-btns">
+                    <button class="btn btn-primary"><i class="fas fa-map-marked-alt"></i> View Live Map</button>
+                    <button class="btn btn-outline" id="emergency-access-btn"><i class="fas fa-ambulance"></i> Emergency Access</button>
+                    <button class="btn btn-outline" id="meet-developers-btn"><i class="fas fa-users"></i> Meet Developers</button>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <div class="section-title">
+                <h2>How We Solve Kottakkal's Traffic Challenges</h2>
+                <p>Our comprehensive platform addresses the unique traffic issues faced by Kottakkal residents and emergency services</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card animate delay-1">
+                    <div class="feature-icon">
+                        <i class="fas fa-satellite-dish"></i>
+                    </div>
+                    <h3>Real-time Traffic Monitoring</h3>
+                    <p>Live updates from sensors and user reports across Kottakkal's key junctions and hospital zones</p>
+                </div>
+                
+                <div class="feature-card animate delay-2">
+                    <div class="feature-icon">
+                        <i class="fas fa-route"></i>
+                    </div>
+                    <h3>AI-Powered Routing</h3>
+                    <p>Intelligent route suggestions that adapt to current congestion and road conditions</p>
+                </div>
+                
+                <div class="feature-card animate delay-3">
+                    <div class="feature-icon">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <h3>Crowdsourced Reporting</h3>
+                    <p>Report accidents, roadblocks, or potholes to help fellow commuters avoid delays</p>
+                </div>
+                
+                <div class="feature-card animate delay-1">
+                    <div class="feature-icon">
+                        <i class="fas fa-ambulance"></i>
+                    </div>
+                    <h3>Emergency Priority System</h3>
+                    <p>Dedicated routes and alerts for ambulances and emergency services</p>
+                </div>
+                
+                <div class="feature-card animate delay-2">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h3>Traffic Analytics</h3>
+                    <p>Historical data and predictive models to understand traffic patterns</p>
+                </div>
+                
+                <div class="feature-card animate delay-3">
+                    <div class="feature-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <h3>Personalized Alerts</h3>
+                    <p>Custom notifications for your daily commute routes and schedules</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Traffic Map Section -->
+    <section class="traffic-map-section" id="traffic-map-section">
+        <div class="container">
+            <div class="section-title">
+                <h2>Live Traffic Map</h2>
+                <p>Current traffic conditions across Kottakkal - updated every minute</p>
+            </div>
+            
+            <div class="map-container">
+                <div class="map-wrapper">
+                    <div class="map-header">
+                        <h3><i class="fas fa-map-marker-alt"></i> Kottakkal Area</h3>
+                        <div>
+                            <button class="btn btn-primary btn-sm"><i class="fas fa-sync-alt"></i> Refresh</button>
+                        </div>
+                    </div>
+                    <div class="map-content">
+                        <div class="map-overlay">
+                            <h3><i class="fas fa-legend"></i> Traffic Legend</h3>
+                            <div class="traffic-legend">
+                                <div class="legend-item">
+                                    <div class="legend-color legend-low"></div>
+                                    <div>Clear (0-20% congestion)</div>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color legend-medium"></div>
+                                    <div>Moderate (20-60%)</div>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color legend-high"></div>
+                                    <div>Heavy (60-100%)</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="traffic-map" style="width:100%; height:100%;"></div>
+                    </div>
+                </div>
+                
+                <div class="traffic-info">
+                    <div class="info-header">
+                        <h3><i class="fas fa-info-circle"></i> Current Traffic Alerts</h3>
+                    </div>
+                    <div class="info-content">
+                        <div class="traffic-status">
+                            <div class="status-indicator status-high"></div>
+                            <div class="status-content">
+                                <h4>Kottakkal Junction</h4>
+                                <p>Severe congestion - festival procession</p>
+                            </div>
+                        </div>
+                        
+                        <div class="traffic-status">
+                            <div class="status-indicator status-medium"></div>
+                            <div class="status-content">
+                                <h4>Hospital Road</h4>
+                                <p>Moderate traffic - construction work</p>
+                            </div>
+                        </div>
+                        
+                        <div class="traffic-status">
+                            <div class="status-indicator status-low"></div>
+                            <div class="status-content">
+                                <h4>Main Bypass Road</h4>
+                                <p>Clear - normal flow</p>
+                            </div>
+                        </div>
+                        
+                        <div class="traffic-status">
+                            <div class="status-indicator status-high"></div>
+                            <div class="status-content">
+                                <h4>Market Street</h4>
+                                <p>Gridlock - accident reported</p>
+                            </div>
+                        </div>
+                        
+                        <div class="traffic-status">
+                            <div class="status-indicator status-medium"></div>
+                            <div class="status-content">
+                                <h4>School Zone</h4>
+                                <p>Moderate traffic during pick-up hours</p>
+                            </div>
+                        </div>
+                        
+                        <div class="traffic-status">
+                            <div class="status-indicator status-low"></div>
+                            <div class="status-content">
+                                <h4>Railway Station Road</h4>
+                                <p>Clear - no delays</p>
+                            </div>
+                        </div>
+                        
+                        <div class="traffic-status">
+                            <div class="status-indicator status-high"></div>
+                            <div class="status-content">
+                                <h4>Medical College Entrance</h4>
+                                <p>Heavy traffic - ambulance access affected</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Route Planner -->
+    <section class="route-planner" id="route-planner">
+        <div class="container">
+            <div class="section-title">
+                <h2>Smart Route Planner</h2>
+                <p>Find the fastest routes around Kottakkal based on current traffic</p>
+            </div>
+            
+            <div class="planner-container">
+                <div class="planner-header">
+                    <div class="planner-form">
+                        <div class="form-group">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <input type="text" class="form-control" placeholder="Start location">
+                        </div>
+                        
+                        <button class="switch-btn">
+                            <i class="fas fa-exchange-alt"></i>
+                        </button>
+                        
+                        <div class="form-group">
+                            <i class="fas fa-flag-checkered"></i>
+                            <input type="text" class="form-control" placeholder="Destination">
+                        </div>
+                        
+                        <button class="btn btn-primary">
+                            <i class="fas fa-route"></i> Plan Route
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="planner-results">
+                    <div class="route-option">
+                        <div class="route-header">
+                            <div class="route-time"><i class="fas fa-clock"></i> 15 min</div>
+                            <div class="route-distance">4.2 km</div>
+                        </div>
+                        <div class="route-details">
+                            <i class="fas fa-road"></i>
+                            <div>Recommended: Via Bypass Road - avoids hospital congestion</div>
+                        </div>
+                    </div>
+                    
+                    <div class="route-option">
+                        <div class="route-header">
+                            <div class="route-time"><i class="fas fa-clock"></i> 22 min</div>
+                            <div class="route-distance">3.8 km</div>
+                        </div>
+                        <div class="route-details">
+                            <i class="fas fa-road"></i>
+                            <div>Via Market Street - heavy traffic expected</div>
+                        </div>
+                    </div>
+                    
+                    <div class="route-option">
+                        <div class="route-header">
+                            <div class="route-time"><i class="fas fa-clock"></i> 18 min</div>
+                            <div class="route-distance">4.5 km</div>
+                        </div>
+                        <div class="route-details">
+                            <i class="fas fa-road"></i>
+                            <div>Via School Road - moderate traffic</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Report Section -->
+    <section class="report-section" id="report-section">
+        <div class="container">
+            <div class="section-title">
+                <h2>Report Road Incidents</h2>
+                <p>Help improve traffic by reporting issues in real-time</p>
+            </div>
+            
+            <div class="report-container">
+                <div class="report-form">
+                    <h3 class="form-title"><i class="fas fa-exclamation-triangle"></i> Report an Issue</h3>
+                    
+                    <div class="report-types">
+                        <div class="report-type active">
+                            <i class="fas fa-car-crash"></i>
+                            <div>Accident</div>
+                        </div>
+                        <div class="report-type">
+                            <i class="fas fa-road-barrier"></i>
+                            <div>Roadblock</div>
+                        </div>
+                        <div class="report-type">
+                            <i class="fas fa-pothole"></i>
+                            <div>Pothole</div>
+                        </div>
+                        <div class="report-type">
+                            <i class="fas fa-traffic-light"></i>
+                            <div>Signal Issue</div>
+                        </div>
+                        <div class="report-type">
+                            <i class="fas fa-water"></i>
+                            <div>Flooding</div>
+                        </div>
+                        <div class="report-type">
+                            <i class="fas fa-question-circle"></i>
+                            <div>Other</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="location">Location</label>
+                            <input type="text" id="location" class="form-control" placeholder="Enter location or landmark">
+                        </div>
+                        <div class="form-group">
+                            <label for="urgency">Urgency Level</label>
+                            <select id="urgency" class="form-control">
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high" selected>High (Emergency)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" class="form-control" rows="4" placeholder="Provide details about the incident"></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="photo">Upload Photo (Optional)</label>
+                            <input type="file" id="photo" class="form-control">
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-primary" style="margin-top: 20px; width: 100%; padding: 14px; font-size: 1.1rem;">
+                        <i class="fas fa-paper-plane"></i> Submit Report
+                    </button>
+                </div>
+                
+                <div class="report-stats">
+                    <h3 class="form-title"><i class="fas fa-chart-pie"></i> Incident Statistics</h3>
+                    <p>Community reports help us improve Kottakkal's traffic management</p>
+                    
+                    <div class="stats-container">
+                        <div class="stat-card">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <div class="stat-value">142</div>
+                            <div class="stat-label">Reports This Week</div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-car-crash"></i>
+                            <div class="stat-value">24</div>
+                            <div class="stat-label">Accidents Reported</div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-road"></i>
+                            <div class="stat-value">63</div>
+                            <div class="stat-label">Road Issues Fixed</div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-clock"></i>
+                            <div class="stat-value">37%</div>
+                            <div class="stat-label">Reduced Response Time</div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 30px; background: var(--light); padding: 20px; border-radius: 12px;">
+                        <h4><i class="fas fa-lightbulb"></i> Pro Tip</h4>
+                        <p>Reporting incidents helps us notify other drivers and authorities faster. Your reports make Kottakkal roads safer!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Emergency Services Section -->
+    <section class="emergency-services-section" id="emergency-services">
+        <div class="hero-emergency">
+            <div class="container">
+                <div class="hero-content">
+                    <h1>Emergency Services Directory</h1>
+                    <p>Your comprehensive guide to emergency services and essential contacts in Kottakkal</p>
+                    <div class="emergency-alert">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>EMERGENCY HOTLINE: 6235239240</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="container">
+            <div class="directory-nav">
+                <div class="dir-btn active" data-section="ambulance">
+                    <i class="fas fa-ambulance"></i>
+                    Ambulance Services
+                </div>
+                <div class="dir-btn" data-section="hospitals">
+                    <i class="fas fa-hospital"></i>
+                    Hospitals
+                </div>
+                <div class="dir-btn" data-section="fire">
+                    <i class="fas fa-fire-extinguisher"></i>
+                    Fire & Rescue
+                </div>
+                <div class="dir-btn" data-section="police">
+                    <i class="fas fa-shield-alt"></i>
+                    Police Stations
+                </div>
+                <div class="dir-btn" data-section="traffic">
+                    <i class="fas fa-traffic-light"></i>
+                    Traffic Control
+                </div>
+            </div>
+            
+            <!-- Ambulance Services Section -->
+            <div class="directory-section active" id="ambulance-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="fas fa-ambulance"></i>
+                    </div>
+                    <h2 class="section-title">Ambulance Services</h2>
+                </div>
+                
+                <p class="section-description">
+                    Immediate medical transportation with traffic pre-clearance to ensure the fastest possible route to the nearest medical facility.
+                </p>
+                
+                <div class="directory-grid">
+                    <div class="directory-card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <i class="fas fa-ambulance"></i>
+                            </div>
+                            <h3>Kottakkal Emergency Ambulance</h3>
+                        </div>
+                        <div class="card-body">
+                            <ul class="contact-info">
+                                <li><i class="fas fa-phone"></i> 0483 274 1199</li>
+                                <li><i class="fas fa-map-marker-alt"></i> Near Municipal Office</li>
+                                <li><i class="fas fa-clock"></i> 24/7 Service</li>
+                                <li><i class="fas fa-truck"></i> 5 Advanced Life Support Ambulances</li>
+                            </ul>
+                            <div class="distance">
+                                <i class="fas fa-location-arrow"></i>
+                                <span>Response time: 7 minutes</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="directory-card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <i class="fas fa-ambulance"></i>
+                            </div>
+                            <h3>Medical College Ambulance</h3>
+                        </div>
+                        <div class="card-body">
+                            <ul class="contact-info">
+                                <li><i class="fas fa-phone"></i> 0483 274 2000</li>
+                                <li><i class="fas fa-map-marker-alt"></i> Medical College Campus</li>
+                                <li><i class="fas fa-clock"></i> 24/7 Service</li>
+                                <li><i class="fas fa-truck"></i> 3 ICU Ambulances</li>
+                            </ul>
+                            <div class="distance">
+                                <i class="fas fa-location-arrow"></i>
+                                <span>Response time: 10 minutes</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="directory-card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <i class="fas fa-ambulance"></i>
+                            </div>
+                            <h3>Red Cross Ambulance</h3>
+                        </div>
+                        <div class="card-body">
+                            <ul class="contact-info">
+                                <li><i class="fas fa-phone"></i> 0483 274 1188</li>
+                                <li><i class="fas fa-map-marker-alt"></i> Main Road, Kottakkal</li>
+                                <li><i class="fas fa-clock"></i> 6:00 AM - 10:00 PM</li>
+                                <li><i class="fas fa-truck"></i> 2 Basic Life Support Ambulances</li>
+                            </ul>
+                            <div class="distance">
+                                <i class="fas fa-location-arrow"></i>
+                                <span>Response time: 12 minutes</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="emergency-form">
+                    <h3 class="form-title"><i class="fas fa-plus-circle"></i> Request Ambulance Service</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="amb-location">Your Location</label>
+                            <input type="text" id="amb-location" class="form-control" placeholder="Enter your location or landmark">
+                        </div>
+                        <div class="form-group">
+                            <label for="emergency-type">Emergency Type</label>
+                            <select id="emergency-type" class="form-control">
+                                <option value="">Select emergency type</option>
+                                <option value="heart">Heart Attack/Stroke</option>
+                                <option value="accident">Road Accident</option>
+                                <option value="breathing">Breathing Difficulty</option>
+                                <option value="childbirth">Childbirth</option>
+                                <option value="other">Other Medical Emergency</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="patient-condition">Patient Condition</label>
+                            <textarea id="patient-condition" class="form-control" placeholder="Describe the patient's condition and symptoms"></textarea>
+                        </div>
+                    </div>
+                    
+                    <button class="btn-emergency">
+                        <i class="fas fa-paper-plane"></i> Request Ambulance Now
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Hospitals Section -->
+            <div class="directory-section" id="hospitals-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="fas fa-hospital"></i>
+                    </div>
+                    <h2 class="section-title">Hospitals & Medical Facilities</h2>
+                </div>
+                
+                <p class="section-description">
+                    Comprehensive list of hospitals and medical facilities in Kottakkal with emergency departments and specialized care.
+                </p>
+                
+                <div class="directory-grid">
+                    <div class="directory-card">
+                        <div the="card-header">
+                            <div class="card-icon">
+                                <i class="fas fa-hospital"></i>
+                            </div>
+                            <h3>Arya Vaidya Sala Hospital</h3>
+                        </div>
+                        <div class="card-body">
+                            <ul class="contact-info">
+                                <li><i class="fas fa-phone"></i> 0483 274 2211</li>
+                                <li><i class="fas fa-map-marker-alt"></i> Kottakkal, Malappuram</li>
+                                <li><i class="fas fa-bed"></i> 250 beds • ICU Available</li>
+                                <li><i class="fas fa-star"></i> Specialties: Ayurveda, General Medicine</li>
+                            </ul>
+                            <div class="distance">
+                                <i class="fas fa-location-arrow"></i>
+                                <span>2.3 km from city center</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div the="directory-card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <i class="fas fa-clinic-medical"></i>
+                            </div>
+                            <h3>Kottakkal Community Hospital</h3>
+                        </div>
+                        <div the="card-body">
+                            <ul class="contact-info">
+                                <li><i class="fas fa-phone"></i> 0483 274 1567</li>
+                                <li><i class="fas fa-map-marker-alt"></i> Near Railway Station</li>
+                                <li><i class="fas fa-bed"></i> 120 beds • Emergency Dept</li>
+                                <li><i class="fas fa-star"></i> Specialties: Trauma, Pediatrics</li>
+                            </ul>
+                            <div the="distance">
+                                <i class="fas fa-location-arrow"></i>
+                                <span>1.8 km from city center</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div the="directory-card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <i class="fas fa-first-aid"></i>
+                            </div>
+                            <h3>Malappuram District Hospital</h3>
+                        </div>
+                        <div class="card-body">
+                            <ul class="contact-info">
+                                <li><i class="fas fa-phone"></i> 0483 273 4321</li>
+                                <li><i class="fas fa-map-marker-alt"></i> Uphill, Malappuram</li>
+                                <li><i class="fas fa-bed"></i> 350 beds • Multi-specialty</li>
+                                <li><i class="fas fa-star"></i> Specialties: Cardiology, Surgery</li>
+                            </ul>
+                            <div class="distance">
+                                <i class="fas fa-location-arrow"></i>
+                                <span>8.5 km from city center</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Fire & Rescue Section -->
+            <div class="directory-section" id="fire-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="fas fa-fire-extinguisher"></i>
+                    </div>
+                    <h2 class="section-title">Fire & Rescue Services</h2>
+                </div>
+                
+                <p class="section-description">
+                    Fire stations and rescue services equipped to handle emergencies 24/7 throughout Kottakkal.
+                </p>
+                
+                <div class="directory-grid">
+                    <div class="directory-card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <i class="fas fa-fire"></i>
+                            </div>
+                            <h3>Kottakkal Main Fire Station</h3>
+                        </div>
+                        <div class="card-body">
+                            <ul class="contact-info">
+                                <li><i class="fas fa-phone"></i> 0483 274 1199</li>
+                                <li><i class="fas fa-map-marker-alt"></i> Kottakkal Town Center</li>
+                                <li><i class="fas fa-truck"></i> 2 Fire Engines • 1 Rescue Truck</li>
+                                <li><i class="fas fa-users"></i> 24/7 Staffing: 15 firefighters</li>
+                            </ul>
+                            <div class="distance">
+                                <i class="fas fa-location-arrow"></i>
+                                <span>Response time: 6 minutes</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="directory-card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <i class="fas fa-fire"></i>
+                            </div>
+                            <h3>Valanchery Fire Station</h3>
+                        </div>
+                        <div class="card-body">
+                            <ul class="contact-info">
+                                <li><i class="fas fa-phone"></i> 0494 268 1199</li>
+                                <li><i class="fas fa-map-marker-alt"></i> NH 66, Valanchery</li>
+                                <li><i class="fas fa-truck"></i> 1 Fire Engine • 1 Water Tanker</li>
+                                <li><i class="fas fa-users"></i> 24/7 Staffing: 10 firefighters</li>
+                            </ul>
+                            <div class="distance">
+                                <i class="fas fa-location-arrow"></i>
+                                <span>Response time: 12 minutes</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Police Stations Section -->
+            <div class="directory-section" id="police-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h2 class="section-title">Police Stations</h2>
+                </div>
+                
+                <p class="section-description">
+                    Police stations serving the Kottakkal area with emergency response and law enforcement services.
+                </p>
+                
+                <div class="directory-grid">
+                    <div class="directory-card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <h3>Kottakkal Town Police Station</h3>
+                        </div>
+                        <div class="card-body">
+                            <ul class="contact-info">
+                                <li><i class="fas fa-phone"></i> 0483 274 1000</li>
+                                <li><i class="fas fa-map-marker-alt"></i> Main Road, Kottakkal</li>
+                                <li><i class="fas fa-car"></i> 4 Patrol Vehicles • 2 Motorcycles</li>
+                                <li><i class="fas fa-users"></i> Staff: 25 officers</li>
+                            </ul>
+                            <div class="distance">
+                                <i class="fas fa-location-arrow"></i>
+                                <span>1.5 km from city center</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="directory-card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <h3>Traffic Police Station</h3>
+                        </div>
+                        <div class="card-body">
+                            <ul class="contact-info">
+                                <li><i class="fas fa-phone"></i> 0483 274 1234</li>
+                                <li><i class="fas fa-map-marker-alt"></i> Near Medical College</li>
+                                <li><i class="fas fa-car"></i> 2 Patrol Vehicles • 5 Motorcycles</li>
+                                <li><i class="fas fa-users"></i> Staff: 15 traffic officers</li>
+                            </ul>
+                            <div class="distance">
+                                <i class="fas fa-location-arrow"></i>
+                                <span>3.1 km from city center</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Traffic Rules Section -->
+    <section class="traffic-rules-section" id="traffic-rules">
+        <div class="container">
+            <div class="section-title">
+                <h2>Traffic Rules Awareness</h2>
+                <p>Promoting safe driving practices in Kottakkal</p>
+            </div>
+            
+            <div class="rules-container">
+                <div class="rules-gallery">
+                    <div class="rule-card">
+                        <div class="rule-image" style="background-image: url('https://images.unsplash.com/photo-1617659258456-3d6f8c9f3a4d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=774&q=80');"></div>
+                        <div class="rule-content">
+                            <h4>Helmet Safety</h4>
+                            <p>Always wear a helmet when riding a two-wheeler</p>
+                        </div>
+                    </div>
+                    
+                    <div class="rule-card">
+                        <div class="rule-image" style="background-image: url('https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80');"></div>
+                        <div class="rule-content">
+                            <h4>Seat Belt Usage</h4>
+                            <p>Buckle up for every trip, no matter how short</p>
+                        </div>
+                    </div>
+                    
+                    <div class="rule-card">
+                        <div class="rule-image" style="background-image: url('https://images.unsplash.com/photo-1560957127-8d964e4ab032?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=774&q=80');"></div>
+                        <div class="rule-content">
+                            <h4>No Drunk Driving</h4>
+                            <p>Never drive under the influence of alcohol</p>
+                        </div>
+                    </div>
+                    
+                    <div class="rule-card">
+                        <div class="rule-image" style="background-image: url('https://images.unsplash.com/photo-1599158507890-a3f5f3c9b9d3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=774&q=80');"></div>
+                        <div class="rule-content">
+                            <h4>Speed Limits</h4>
+                            <p>Adhere to posted speed limits for everyone's safety</p>
+                        </div>
+                    </div>
+                    
+                    <div class="rule-card">
+                        <div class="rule-image" style="background-image: url('https://images.unsplash.com/photo-1511919884226-fd3cad34687c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80');"></div>
+                        <div class="rule-content">
+                            <h4>Pedestrian Crossings</h4>
+                            <p>Always yield to pedestrians at crosswalks</p>
+                        </div>
+                    </div>
+                    
+                    <div class="rule-card">
+                        <div class="rule-image" style="background-image: url('https://images.unsplash.com/photo-1554224155-6726b3ff858f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1611&q=80');"></div>
+                        <div class="rule-content">
+                            <h4>No Mobile Use</h4>
+                            <p>Avoid using mobile phones while driving</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="rules-form">
+                    <h3><i class="fas fa-camera"></i> Share Your Safe Driving Photo</h3>
+                    <p>Help promote traffic safety awareness by sharing photos of you following traffic rules</p>
+                    
+                    <div class="form-group">
+                        <label>Your Name (Optional)</label>
+                        <input type="text" placeholder="Enter your name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Upload Your Photo</label>
+                        <input type="file" accept="image/*" capture="camera">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Description (Optional)</label>
+                        <textarea placeholder="Describe the traffic rule you're following"></textarea>
+                    </div>
+                    
+                    <button class="btn btn-primary" style="width: 100%; padding: 14px; margin-top: 10px;">
+                        <i class="fas fa-share-alt"></i> Share Your Photo
+                    </button>
+                    
+                    <div class="rules-importance">
+                        <h4><i class="fas fa-exclamation-triangle"></i> Why Following Traffic Rules Matters</h4>
+                        <ul>
+                            <li>Reduces accidents and saves lives</li>
+                            <li>Ensures smooth traffic flow in Kottakkal</li>
+                            <li>Protects pedestrians, especially near schools and hospitals</li>
+                            <li>Prevents traffic fines and penalties</li>
+                            <li>Sets a good example for others in the community</li>
+                            <li>Helps emergency vehicles reach their destinations faster</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Developers Section -->
+    <section class="developers-section" id="developers-section">
+        <div class="container">
+            <div class="section-title">
+                <h2>Meet Our Developers</h2>
+                <p>The talented team behind Kottakkal's Smart Traffic Monitor</p>
+            </div>
+            
+            <div class="developers-grid">
+                <div class="developer-card">
+                    <div class="developer-header">
+                        <div class="developer-avatar rishal"></div>
+                        <h3>Mohiyudheen Rishal</h3>
+                        <p class="role">Lead Developer</p>
+                    </div>
+                    <div class="developer-body">
+                        <div class="developer-info">
+                            <div class="institution">
+                                <i class="fas fa-graduation-cap"></i>
+                                <span>Govt. Polytechnic College Kalamassery</span>
+                            </div>
+                            <p>Mohiyudheen Rishal brings expertise in IoT systems and real-time data processing. He architected the traffic monitoring infrastructure that powers this platform.</p>
+                        </div>
+                        <div class="developer-skills">
+                            <span class="skill-tag">IoT</span>
+                            <span class="skill-tag">Python</span>
+                            <span class="skill-tag">Data Analysis</span>
+                            <span class="skill-tag">Embedded Systems</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="developer-card">
+                    <div class="developer-header">
+                        <div class="developer-avatar jibin"></div>
+                        <h3>Jibin Althaf</h3>
+                        <p class="role">Frontend Developer</p>
+                    </div>
+                    <div class="developer-body">
+                        <div class="developer-info">
+                            <div class="institution">
+                                <i class="fas fa-graduation-cap"></i>
+                                <span>University College Kozhikode</span>
+                            </div>
+                            <p>Jibin designed the user interface and implemented the visualization components. His focus on user experience ensures the platform is accessible to all residents.</p>
+                        </div>
+                        <div class="developer-skills">
+                            <span class="skill-tag">python</span>
+                            <span class="skill-tag">UI/UX Design</span>
+                            <span class="skill-tag">React</span>
+                            <span class="skill-tag">Data Visualization</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="page-navigation">
+                <button class="page-btn" id="back-to-top-btn">
+                    <i class="fas fa-arrow-up"></i> Back to Top
+                </button>
+            </div>
+        </div>
+    </section>
+    
+    <div id="alert-modal" class="alert-modal">
+        <div class="alert-modal-content">
+            <span class="close-alert">&times;</span>
+            <h3>Current Traffic Alerts</h3>
+            <div class="alert-list">
+                <div class="traffic-status">
+                    <div class="status-indicator status-high"></div>
+                    <div class="status-content">
+                        <h4>Kottakkal Junction</h4>
+                        <p>Severe congestion - festival procession</p>
+                    </div>
+                </div>
+                <div class="traffic-status">
+                    <div class="status-indicator status-medium"></div>
+                    <div class="status-content">
+                        <h4>Hospital Road</h4>
+                        <p>Moderate traffic - construction work</p>
+                    </div>
+                </div>
+                <div class="traffic-status">
+                    <div class="status-indicator status-low"></div>
+                    <div class="status-content">
+                        <h4>Main Bypass Road</h4>
+                        <p>Clear - normal flow</p>
+                    </div>
+                </div>
+                <div class="traffic-status">
+                    <div class="status-indicator status-high"></div>
+                    <div class="status-content">
+                        <h4>Market Street</h4>
+                        <p>Gridlock - accident reported</p>
+                    </div>
+                </div>
+                <div class="traffic-status">
+                    <div class="status-indicator status-medium"></div>
+                    <div class="status-content">
+                        <h4>School Zone</h4>
+                        <p>Moderate traffic during pick-up hours</p>
+                    </div>
+                </div>
+                <div class="traffic-status">
+                    <div class="status-indicator status-low"></div>
+                    <div class="status-content">
+                        <h4>Railway Station Road</h4>
+                        <p>Clear - no delays</p>
+                    </div>
+                </div>
+                <div class="traffic-status">
+                    <div class="status-indicator status-high"></div>
+                    <div class="status-content">
+                        <h4>Medical College Entrance</h4>
+                        <p>Heavy traffic - ambulance access affected</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="logo" style="color: white; margin-bottom: 20px;">
+                        <i class="fas fa-traffic-light"></i>
+                        <h1>Kottakkal Traffic Solutions</h1>
+                    </div>
+                    <p>Empowering Kottakkal with innovative traffic management systems for safer and more efficient transportation.</p>
+                    
+                    <div class="footer-newsletter">
+                        <h4><i class="fas fa-envelope"></i> Subscribe to our Newsletter</h4>
+                        <input type="email" placeholder="Your email address">
+                        <button>Subscribe</button>
+                    </div>
+                    
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-col">
+                    <h3>Quick Links</h3>
+                    <ul class="contact-info">
+                        <li><a href="#" style="color: rgb(36, 180, 55); text-decoration: none;">Traffic Updates</a></li>
+                        <li><a href="#" style="color: rgb(14, 224, 109); text-decoration: none;">Road Safety Tips</a></li>
+                        <li><a href="#" style="color: rgb(15, 199, 45); text-decoration: none;">Project Timeline</a></li>
+                        <li><a href="#" style="color: rgb(18, 196, 27); text-decoration: none;">Community Forum</a></li>
+                        <li><a href="#" style="color: rgb(32, 228, 14); text-decoration: none;">Volunteer Program</a></li>
+                        <li><a href="#" style="color: rgb(23, 226, 16); text-decoration: none;">Feedback & Suggestions</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h3>Contact Us</h3>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Traffic Control Center, Kottakkal Municipal Office, Malappuram, Kerala 676501</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-phone"></i>
+                            <span>6235239240</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-envelope"></i>
+                            <span>support@kottakkaltraffic.org</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-clock"></i>
+                            <span>Mon-Sat: 8:00 AM - 8:00 PM</span>
+                        </li>
+                    </ul>
+                    
+                    <div class="footer-map">
+                        <i class="fas fa-map"></i>
+                        <h4>Our Location</h4>
+                        <p>Kottakkal Municipal Office</p>
+                    </div>
+                </div>
+                
+                <div class="footer-col">
+                    <h3>Project Partners</h3>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="fas fa-building"></i>
+                            <span>farook college Kottakkal</span>
+                        </li>
+                        <li>
+                        
+                        </li>
+                    </ul>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 12px;">
+                        <h4><i class="fas fa-download"></i> Download Our App</h4>
+                        <div style="display: flex; gap: 10px; margin-top: 10px;">
+                            <button style="flex:1; padding: 10px; background: #333; border: none; border-radius: 8px; color: white;">
+                                <i class="fab fa-apple"></i> App Store
+                            </button>
+                            <button style="flex:1; padding: 10px; background: #333; border: none; border-radius: 8px; color: white;">
+                                <i class="fab fa-google-play"></i> Play Store
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                <p>&copy; 2025 Kottakkal Smart Traffic Initiative. A project by the farook Kottakkal. | Developed by Rishal & Jibin</p>
+                <p style="margin-top: 10px;">All data is collected and processed in compliance with Kerala Data Protection Regulations.</p>
+            </div>
+        </div>
+    </footer>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Feature animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Feature card animations
+            const featureCards = document.querySelectorAll('.feature-card');
+            
+            featureCards.forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    card.style.transform = 'translateY(-10px)';
+                });
+                
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = 'translateY(0)';
+                });
+            });
+            
+            // Report type selection
+            const reportTypes = document.querySelectorAll('.report-type');
+            reportTypes.forEach(type => {
+                type.addEventListener('click', () => {
+                    reportTypes.forEach(t => t.classList.remove('active'));
+                    type.classList.add('active');
+                });
+            });
+            
+            // Route option hover effect
+            const routeOptions = document.querySelectorAll('.route-option');
+            routeOptions.forEach(option => {
+                option.addEventListener('mouseenter', () => {
+                    option.style.transform = 'translateX(5px)';
+                });
+                
+                option.addEventListener('mouseleave', () => {
+                    option.style.transform = 'translateX(0)';
+                });
+            });
+            
+            // Emergency card hover effect
+            const emergencyCards = document.querySelectorAll('.directory-card');
+            emergencyCards.forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    card.style.transform = 'translateY(-10px)';
+                });
+                
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = 'translateY(0)';
+                });
+            });
+            
+            // Form submission
+            const reportForm = document.querySelector('.report-form');
+            if(reportForm) {
+                reportForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    alert('Thank you for your report! Our team will review it shortly and update traffic information.');
+                    reportForm.reset();
+                });
+            }
+            
+            // Animate elements on scroll
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animate');
+                    }
+                });
+            }, { threshold: 0.1 });
+            
+            document.querySelectorAll('.feature-card, .section-title').forEach(el => {
+                observer.observe(el);
+            });
+            
+            // Meet Developers button functionality
+            const meetDevBtn = document.getElementById('meet-developers-btn');
+            const developersSection = document.getElementById('developers-section');
+            const backToTopBtn = document.getElementById('back-to-top-btn');
+            const emergencyAccessBtn = document.getElementById('emergency-access-btn');
+            const emergencySection = document.getElementById('emergency-services');
+            
+            if(meetDevBtn && developersSection) {
+                meetDevBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    developersSection.scrollIntoView({ behavior: 'smooth' });
+                });
+            }
+            
+            if(emergencyAccessBtn && emergencySection) {
+                emergencyAccessBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    emergencySection.scrollIntoView({ behavior: 'smooth' });
+                });
+            }
+            
+            if(backToTopBtn) {
+                backToTopBtn.addEventListener('click', function() {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            }
+            
+            // Newsletter subscription
+            const subscribeBtn = document.querySelector('.footer-newsletter button');
+            if(subscribeBtn) {
+                subscribeBtn.addEventListener('click', function() {
+                    const emailInput = document.querySelector('.footer-newsletter input');
+                    if(emailInput.value && emailInput.value.includes('@')) {
+                        alert('Thank you for subscribing to our newsletter!');
+                        emailInput.value = '';
+                    } else {
+                        alert('Please enter a valid email address.');
+                    }
+                });
+            }
+            
+            // Traffic rules photo submission
+            const rulesForm = document.querySelector('.rules-form');
+            if(rulesForm) {
+                const submitBtn = rulesForm.querySelector('.btn-primary');
+                submitBtn.addEventListener('click', function() {
+                    const fileInput = rulesForm.querySelector('input[type="file"]');
+                    if(!fileInput.files.length) {
+                        alert('Please select a photo to upload');
+                        return;
+                    }
+                    
+                    alert('Thank you for sharing your photo! We appreciate you promoting traffic safety in Kottakkal.');
+                    rulesForm.reset();
+                });
+            }
+            
+            // Directory Navigation Functionality
+            const dirBtns = document.querySelectorAll('.dir-btn');
+            const dirSections = document.querySelectorAll('.directory-section');
+            
+            dirBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const sectionId = this.getAttribute('data-section');
+                    
+                    // Remove active class from all buttons and sections
+                    dirBtns.forEach(b => b.classList.remove('active'));
+                    dirSections.forEach(s => s.classList.remove('active'));
+                    
+                    // Add active class to clicked button and corresponding section
+                    this.classList.add('active');
+                    document.getElementById(`${sectionId}-section`).classList.add('active');
+                    
+                    // Scroll to the top of the section
+                    document.getElementById(`${sectionId}-section`).scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                });
+            });
+            
+            // Ambulance request form handling
+            const ambulanceForm = document.querySelector('.emergency-form');
+            if(ambulanceForm) {
+                const submitBtn = ambulanceForm.querySelector('.btn-emergency');
+                submitBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Get the location value
+                    const location = document.getElementById('amb-location').value;
+                    if (!location) {
+                        alert('Please enter your location so we can dispatch help!');
+                        return;
+                    }
+                    
+                    alert('Ambulance service has been requested! Our team is dispatching help to your location immediately. Stay on the line if possible.');
+                    
+                    // Simulate form reset
+                    document.getElementById('amb-location').value = '';
+                    document.getElementById('emergency-type').selectedIndex = 0;
+                    document.getElementById('patient-condition').value = '';
+                });
+            }
+            
+            // Simulate distance calculation
+            function calculateDistances() {
+                const distanceElements = document.querySelectorAll('.distance span');
+                distanceElements.forEach(el => {
+                    // Generate a random distance between 1-10km
+                    const distance = (Math.random() * 9 + 1).toFixed(1);
+                    const responseTime = Math.floor(Math.random() * 6) + 5;
+                    
+                    if (el.textContent.includes('km')) {
+                        el.textContent = `${distance} km from city center`;
+                    } else if (el.textContent.includes('time')) {
+                        el.textContent = `Response time: ${responseTime} minutes`;
+                    }
+                });
+            }
+            
+            // Initialize distances
+            calculateDistances();
+            
+            // Initialize Leaflet map
+            var map = L.map('traffic-map').setView([11.0008, 76.0018], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+            // Add route markers
+            var startMarker = L.marker([11.000112, 75.998833]).addTo(map).bindPopup('Start: Kottakkal Town Center');
+            var endMarker = L.marker([11.001494, 76.00486]).addTo(map).bindPopup('Destination: Changuvetty Junction');
+            // Custom icons for alerts
+            var heavyIcon = L.divIcon({
+                html: '<i class="fas fa-exclamation-triangle fa-2x" style="color: orange; text-shadow:0 0 3px #000;"></i>',
+                className: 'heavy-icon',
+                iconSize: [30, 30],
+                iconAnchor: [15, 30]
+            });
+            var accidentIcon = L.divIcon({
+                html: '<i class="fas fa-car-crash fa-2x" style="color: red; text-shadow:0 0 3px #000;"></i>',
+                className: 'accident-icon',
+                iconSize: [30, 30],
+                iconAnchor: [15, 30]
+            });
+            // Example alert markers
+            L.marker([11.001494, 76.00486], { icon: heavyIcon }).addTo(map).bindPopup('Severe congestion at Kottakkal Junction');
+            L.marker([10.9997, 75.9975], { icon: accidentIcon }).addTo(map).bindPopup('Accident reported at Market Street');
+            // Alerts modal functionality
+            const alertsBtn = document.getElementById('alerts-btn');
+            const alertModal = document.getElementById('alert-modal');
+            const closeAlertBtn = document.querySelector('.close-alert');
+            if (alertsBtn) {
+                alertsBtn.addEventListener('click', function() {
+                    alertModal.style.display = 'flex';
+                });
+            }
+            if (closeAlertBtn) {
+                closeAlertBtn.addEventListener('click', function() {
+                    alertModal.style.display = 'none';
+                });
+            }
+            window.addEventListener('click', function(e) {
+                if (e.target == alertModal) {
+                    alertModal.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
